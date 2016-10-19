@@ -74,7 +74,6 @@ public class GameController : MonoBehaviour {
 		updateUI();
 	}
 
-
 	// Auxiliary methods
 	// ==========================================
 

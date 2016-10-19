@@ -1,20 +1,45 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+
+PLAYER CONTROLLER
+=================
+
+Control player object movement, animations, physics and collisions.
+
+*/
+
 public class PlayerController : MonoBehaviour {
 
-	private Transform _transform;
-	private Rigidbody2D _rigidbody;
-	private float _move;
-	private float _jump;
-	private bool _isFacingRight;
-	private bool _isGrounded;
-	private bool _playerWon;
-	private Animator _animator;
+	// ==========================================
+	// Attributes
+	// ==========================================
+
+	// References to player components
+	private Transform pTransform;
+	private Rigidbody2D pRigidbody;
+	
+	// Vector components for horizontal/vertical movement
+	private float move;
+	private float jump;
+
+	// Positioning/gameflow flags
+	private bool isFacingRight;
+	private bool isGrounded;
+	private bool playerWon;
+
+	// Animation components
+	private Animator animator;
+
+	// Reference to the game controller
 	public GameController gameController;
 
+	// Movement parameters
 	public float velocity = 20f;
 	public float jumpForce = 400f;
+
+	// This spawn point is updated after reaching checkpoints
 	public Transform SpawnPoint;
 	public Camera camera;
 
@@ -34,66 +59,70 @@ public class PlayerController : MonoBehaviour {
 	public AudioClip winSound;
 	private AudioSource audioSource;
 
-	// Use this for initialization
+	// ==========================================
+	// Object initialization
+	// ==========================================
 	void Start () {
-		this._initialize();
+		this.initialize();
 	}
 
+	// ==========================================
+	// Game Lifecycle Updates
+	// ==========================================
 	void Update() {
-			if (Input.GetKeyDown(KeyCode.Space) && !_playerWon) {
-				this._jump = 1f;
+			if (Input.GetKeyDown(KeyCode.Space) && !playerWon) {
+				this.jump = 1f;
 				audioSource.PlayOneShot(this.jumpSound);
 			}
 	}
 	
-	// Update is called once per frame
 	void FixedUpdate () {
 
-		if (!_playerWon){
+		if (!playerWon){
 
-			if (this._isGrounded) {
-				// Check if input for movement is present
-				this._move = Input.GetAxis("Horizontal");
-				if (this._move > 0f) {
-					this._move = 1;
-					this._animator.SetInteger("HeroState", 1);
-					this._isFacingRight = true;
-					this._flip();
-				} 
-				else if (this._move < 0f) {
-					this._move = -1;
-					this._animator.SetInteger("HeroState", 1);
-					this._isFacingRight = false;
-					this._flip();
-				} 
-				else {
-					this._move = 0;
-					this._animator.SetInteger("HeroState", 0);
+			// Process ground movement
+			if (this.isGrounded) {
+				this.move = Input.GetAxis("Horizontal");
+				if (this.move > 0f) {
+					this.move = 1;
+					this.animator.SetInteger("HeroState", 1);
+					this.isFacingRight = true;
+					this.flipHorizontal();
+				} else if (this.move < 0f) {
+					this.move = -1;
+					this.animator.SetInteger("HeroState", 1);
+					this.isFacingRight = false;
+					this.flipHorizontal();
+				} else {
+					this.move = 0;
+					this.animator.SetInteger("HeroState", 0);
 				}
 
-				if (Input.GetAxis ("Fire1") == 1) this._fire();
+				// Process weapon firing
+				if (Input.GetAxis ("Fire1") == 1) this.fire();
 				timeTilNextFire -= Time.deltaTime;
 
-				this._rigidbody.AddForce(new Vector2(
-					this._move * this.velocity, 
-					this._jump * this.jumpForce),
+				// Add movement to player's body
+				this.pRigidbody.AddForce(new Vector2(
+					this.move * this.velocity, 
+					this.jump * this.jumpForce),
 					ForceMode2D.Force);
 			}
 			else {
-				// Not grounded
-				this._move = 0f;
-				this._jump = 0f;
+				// Player is airbourne, apply zero extra force and let gravity act.
+				this.move = 0f;
+				this.jump = 0f;
 			}
 
 			// Follow player with the camera
 			this.camera.transform.position = new Vector3(
-				this._transform.position.x,
-				this._transform.position.y,
+				this.pTransform.position.x,
+				this.pTransform.position.y,
 				-10f);
 
 		} else {
 			// Player won, levitate it to infinity and end the game.
-			this._rigidbody.AddForce(new Vector2(0f, 
+			this.pRigidbody.AddForce(new Vector2(0f, 
 					1f * (this.jumpForce / 8f)),
 					ForceMode2D.Force);
 			gameController.gameOver();
@@ -101,46 +130,94 @@ public class PlayerController : MonoBehaviour {
 
 	}
 
-	private void _initialize(){
-		this._transform = GetComponent<Transform>();
-		this._rigidbody = GetComponent<Rigidbody2D>();
-		this._animator = GetComponent<Animator>();
+	// Auxiliary methods
+	// ==========================================	
+
+	// Player initialization
+	private void initialize(){
+		this.pTransform = GetComponent<Transform>();
+		this.pRigidbody = GetComponent<Rigidbody2D>();
+		this.animator = GetComponent<Animator>();
 		this.audioSource = GetComponent<AudioSource>();
-		this._move = 0f;
-		this._isFacingRight = true;
-		this._isGrounded = false;
-		this._playerWon = false;
+		this.move = 0f;
+		this.isFacingRight = true;
+		this.isGrounded = false;
+		this.playerWon = false;
 	}
 
-	private void _flip() {
-		if (this._isFacingRight) {
-			this._transform.localScale = new Vector2(1f,1f);
+	// Flip sprite when changing direction
+	private void flipHorizontal() {
+		if (this.isFacingRight) {
+			this.pTransform.localScale = new Vector2(1f,1f);
 		}
 		else {
-			this._transform.localScale = new Vector2(-1f,1f);
+			this.pTransform.localScale = new Vector2(-1f,1f);
+		}
+	}
+
+	// Fire bullets
+	private void fire(){
+		if (timeTilNextFire <= 0) {
+			if (gameController.playerAmmo == 0) {
+				audioSource.PlayOneShot(this.emptySound);
+			} else {
+				// Determine the position and angle for the fired bullet instance
+				Vector3 bulletPos = this.pTransform.position;
+				float rotationAngle = this.pTransform.localEulerAngles.z - 90;
+
+				// Calculate the position of the bullet in front of the player
+				bulletPos.x = bulletPos.x + (bulletDistance * this.pTransform.localScale.x);
+				bulletPos.y += 0.16f;
+
+				// Create the bullet instance and trigger sounds/game updates
+				bullet.transform.localScale = this.pTransform.localScale;
+				Instantiate (bullet, bulletPos, this.pTransform.rotation);
+				this.animator.SetInteger("HeroState", 10);
+				audioSource.PlayOneShot(this.fireSound);
+				gameController.updateAmmoCount(-1);
+			}
+			timeTilNextFire = timeBetweenFires;
 		}
 	}
 
 	// Collision detection methods
+	// =================================================
+
+	// Process physical collisions (w/ platforms, enemies)
 	private void OnCollisionEnter2D(Collision2D other) {
 		if (other.gameObject.CompareTag("DeathPlane") || other.gameObject.CompareTag("Enemy")) {
 			audioSource.PlayOneShot(this.deadSound);
 			gameController.updateLivesCount(-1);
+
 			if (gameController.playerLives >= 0) {
-				this._transform.position = this.SpawnPoint.position;
+				this.pTransform.position = this.SpawnPoint.position;
 			} else {
 				gameController.gameOver();
 				Destroy(this.gameObject);
 			}
+		
 		}
 		
 		if (other.gameObject.CompareTag("Platform")) {
 			audioSource.PlayOneShot(this.landSound);
-			this._animator.SetInteger("HeroState", 0);
+			this.animator.SetInteger("HeroState", 0);
 		}
 	}
 
+	private void OnCollisionStay2D(Collision2D other) {
+		if (other.gameObject.CompareTag("Platform")) {
+			this.isGrounded = true;
+		}
+	}
+
+	private void OnCollisionExit2D(Collision2D other) {
+		this.isGrounded = false;
+		this.animator.SetInteger("HeroState", 2);
+	}
+
+	// Process triggers (for pickups)
 	private void OnTriggerEnter2D(Collider2D other) {
+
 		if (other.gameObject.CompareTag("AmmoPickup")) {
 			other.gameObject.SendMessage("DestroyPickup");
 			gameController.updateAmmoCount(+6);
@@ -152,52 +229,17 @@ public class PlayerController : MonoBehaviour {
 			other.gameObject.SendMessage("DestroyPickup");
 			audioSource.PlayOneShot(this.winSound);
 			gameController.updateScore(+3000);
-			this._playerWon = true;
+			this.playerWon = true;
 		}
 
 	}
 
-	private void OnCollisionStay2D(Collision2D other) {
-		if (other.gameObject.CompareTag("Platform")) {
-			this._isGrounded = true;
-		}
-	}
+	// Public methods
+	// ==========================================	
 
-	private void OnCollisionExit2D(Collision2D other) {
-		this._isGrounded = false;
-		this._animator.SetInteger("HeroState", 2);
-	}
-
-	// Fire bullets
-	private void _fire(){
-		if (timeTilNextFire <= 0) {
-			if (gameController.playerAmmo == 0) {
-				audioSource.PlayOneShot(this.emptySound);
-			} else {
-				Vector3 bulletPos = this._transform.position;
-
-				// Determine the bullet angle
-				float rotationAngle = this._transform.localEulerAngles.z - 90;
-
-				// Calculate the position of the bullet in front of the player
-				bulletPos.x = bulletPos.x + (bulletDistance * this.transform.localScale.x);
-				bulletPos.y += 0.16f;
-
-				// Create the bullet instance
-				bullet.transform.localScale = this._transform.localScale;
-				Instantiate (bullet, bulletPos, this.transform.rotation);
-				this._animator.SetInteger("HeroState", 10);
-				audioSource.PlayOneShot(this.fireSound);
-				gameController.updateAmmoCount(-1);
-			}
-			timeTilNextFire = timeBetweenFires;
-		}
-
-	}
-
-	// This public method is used by moving platforms
+	// This method is used by moving platforms
 	// to displace the player together with them as they move
 	public void Displace(Vector3 displacement) {
-		this._transform.position += displacement;
+		this.pTransform.position += displacement;
 	}
 }

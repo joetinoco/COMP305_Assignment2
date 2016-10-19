@@ -14,6 +14,10 @@ Manages score, player lives and GUI updates.
 
 public class GameController : MonoBehaviour {
 
+	// ==========================================
+	// Attributes
+	// ==========================================
+
 	public int initialPlayerLives = 5;
 	public int initialPlayerAmmo = 0;
 	public int maxPlayerAmmo = 6;
@@ -39,6 +43,9 @@ public class GameController : MonoBehaviour {
 	private GameObject[] ammo;
 	private GameObject[] lives;
 
+	// ==========================================
+	// Object initialization
+	// ==========================================
 	void Start () {
 
 		gameOverText.gameObject.SetActive(false);
@@ -59,29 +66,41 @@ public class GameController : MonoBehaviour {
 		playerLives = initialPlayerLives;
 		this.updateAmmoCount(initialPlayerAmmo);
 	}
-	
-	// Update is called once per frame
+
+	// ==========================================
+	// Game Lifecycle Updates
+	// ==========================================
 	void Update () {
 		updateUI();
 	}
 
+
+	// Auxiliary methods
+	// ==========================================
+
+	// UI updates for score changes
 	private void updateUI(){
 		scoreText.text = "Score: " + playerScore;
 	}
 
-	// Allow player to update the game lives count
+	// Public methods
+	// ==========================================
+
+	// Allow updates to the game lives count
 	public int updateLivesCount(int delta) {
 		playerLives += delta;
+		// Update GUI life count
 		for (int i = 0; i < initialPlayerLives; i++){
 			lives[i].SetActive(i < playerLives); 
 		}
 		return this.playerLives;
 	}
 
-	// Allow player to update the ammo count
+	// Allow updates to the ammo count
 	public int updateAmmoCount(int delta) {
 		playerAmmo += delta;
 		if (playerAmmo > maxPlayerAmmo) playerAmmo = maxPlayerAmmo; 
+		// Update GUI ammo count
 		for (int i = 0; i < maxPlayerAmmo; i++){
 			ammo[i].SetActive(i < playerAmmo); 
 		}

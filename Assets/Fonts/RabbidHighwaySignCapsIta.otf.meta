@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 575d26df397702e499f10b6f8f05047f
+timeCreated: 1476741471
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Rabbid Highway Sign Caps
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 23fa777c42e7ecd429b857dfd39ae744, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

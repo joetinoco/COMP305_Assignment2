@@ -1,0 +1,7 @@
+.vscode
+/library/**
+/library
+library/*
+library/**/*
+library
+Temp

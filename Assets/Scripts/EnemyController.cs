@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Text.RegularExpressions;
 
 /*
 
@@ -36,6 +36,20 @@ public class EnemyController : MonoBehaviour {
 	void Start () {
 		this.eTransform = GetComponent<Transform>();
 		gameController = GameObject.Find("GameController");
+
+		string instanceNumber = this.getInstanceNumber(gameObject.ToString());
+
+		// Attempt to infer the waypoints using object names
+		GameObject found;
+		if (!this.movementStart) {
+			found = GameObject.Find("E" + instanceNumber + "Start");
+			if (found) this.movementStart = found.transform;
+		}
+
+		if (!this.movementEnd) {
+			found = GameObject.Find("E" + instanceNumber + "End");
+			if (found) this.movementEnd = found.transform;
+		}
 	}
 	
 	// ==========================================
@@ -79,7 +93,7 @@ public class EnemyController : MonoBehaviour {
 
 	// Collision detection methods
 	// =================================================
-	
+
 	private void OnCollisionEnter2D(Collision2D other) {
 		if (other.gameObject.CompareTag("Bullet")) {
 			other.gameObject.SendMessage("DestroyBullet");
@@ -87,6 +101,17 @@ public class EnemyController : MonoBehaviour {
 			gameController.SendMessage("updateScore", this.enemyPoints);
 			Destroy(this.gameObject);
 		}
+	}
+
+	// Auxiliary methods
+	// ==========================================
+
+	// Extract the instance number from the prefab obj name
+	// (e.g.: returns 29 for "Enemy (29)")
+	private string getInstanceNumber(string objName) {
+		Regex rx = new Regex(@"([0-9]+)");
+		MatchCollection matches = rx.Matches(objName);
+		return matches[0].ToString();
 	}
 
 }

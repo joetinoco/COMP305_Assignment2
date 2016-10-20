@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 /*
 
@@ -41,7 +40,7 @@ public class PlayerController : MonoBehaviour {
 
 	// This spawn point is updated after reaching checkpoints
 	public Transform SpawnPoint;
-	public Camera camera;
+	public Camera gameCamera;
 
 	// Bullets
 	public Transform bullet;
@@ -115,7 +114,7 @@ public class PlayerController : MonoBehaviour {
 			}
 
 			// Follow player with the camera
-			this.camera.transform.position = new Vector3(
+			this.gameCamera.transform.position = new Vector3(
 				this.pTransform.position.x,
 				this.pTransform.position.y,
 				-10f);
@@ -161,9 +160,8 @@ public class PlayerController : MonoBehaviour {
 			if (gameController.playerAmmo == 0) {
 				audioSource.PlayOneShot(this.emptySound);
 			} else {
-				// Determine the position and angle for the fired bullet instance
+				// Determine the position for the fired bullet instance
 				Vector3 bulletPos = this.pTransform.position;
-				float rotationAngle = this.pTransform.localEulerAngles.z - 90;
 
 				// Calculate the position of the bullet in front of the player
 				bulletPos.x = bulletPos.x + (bulletDistance * this.pTransform.localScale.x);

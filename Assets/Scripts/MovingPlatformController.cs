@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Text.RegularExpressions;
 
 /*
 
@@ -42,6 +42,20 @@ public class MovingPlatformController : MonoBehaviour {
 	// ==========================================
 	void Start () {
 		this.mpTransform = GetComponent<Transform>();
+
+		string instanceNumber = this.getInstanceNumber(gameObject.ToString());
+
+		// Attempt to infer the waypoints using object names
+		GameObject found;
+		if (!this.movementStart) {
+			found = GameObject.Find("MP" + instanceNumber + "Start");
+			if (found) this.movementStart = found.transform;
+		}
+
+		if (!this.movementEnd) {
+			found = GameObject.Find("MP" + instanceNumber + "End");
+			if (found) this.movementEnd = found.transform;
+		}
 	}
 	
 	// ==========================================
@@ -120,5 +134,16 @@ public class MovingPlatformController : MonoBehaviour {
 			}
 		}
 	}
+
+	// Auxiliary methods
+	// ==========================================
+
+	// Extract the instance number from the prefab obj name
+	// (e.g.: returns 29 for "Platform (29)")
+	private string getInstanceNumber(string objName) {
+		Regex rx = new Regex(@"([0-9]+)");
+		MatchCollection matches = rx.Matches(objName);
+		return matches[0].ToString();
+	}	
 
 }

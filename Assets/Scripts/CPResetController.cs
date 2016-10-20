@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 /*
 
@@ -17,7 +16,6 @@ public class CPResetController : MonoBehaviour {
 	// Attributes
 	// ==========================================	
 
-	private Transform cprcTransform;
 	private Transform spawnPoint;
 
 	// The destination checkpoint the player should be set to
@@ -29,7 +27,6 @@ public class CPResetController : MonoBehaviour {
 	// Object initialization
 	// ==========================================
 	void Start () {
-		this.cprcTransform = GetComponent<Transform>();
 		this.spawnPoint = GameObject.FindWithTag("SpawnPoint").transform;
 	}
 

@@ -1,25 +1,40 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+
+CHECKPOINT CONTROLLER
+=====================
+
+A hidden collider that moves the spawn point forward when the player reaches it.
+
+*/
+
 public class CheckPointController : MonoBehaviour {
 
-	private Transform _transform;
-	public Transform SpawnPoint;
+	// ==========================================
+	// Attributes
+	// ==========================================	
 
-	// Use this for initialization
+	private Transform cpTransform;
+
+	// Reference to the single spawn point in the game
+	public Transform spawnPoint;
+
+	// ==========================================
+	// Object initialization
+	// ==========================================
 	void Start () {
-		this._transform = GetComponent<Transform>();
-		this.SpawnPoint = GameObject.FindWithTag("SpawnPoint").transform;
+		this.cpTransform = GetComponent<Transform>();
+		this.spawnPoint = GameObject.FindWithTag("SpawnPoint").transform;
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+
+	// Collision detection methods
+	// =================================================
 
 	void OnTriggerEnter2D(Collider2D other) {
 		if (other.gameObject.CompareTag("Player")) {
-			this.SpawnPoint.position = this._transform.position;
+			this.spawnPoint.position = this.cpTransform.position;
 		}
 	}
 
